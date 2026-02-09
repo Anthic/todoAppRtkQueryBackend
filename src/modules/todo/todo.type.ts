@@ -1,6 +1,7 @@
 export interface ITodo {
   id: number;
   title: string;
+  image: string | null;
   completed: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -8,9 +9,11 @@ export interface ITodo {
 
 export interface CreateTodoDTO {
   title: string;
+  image?: string ;
 }
 
 export interface UpdateTodoDTO {
   title?: string;
+  image?: string ;
   completed?: boolean;
 }

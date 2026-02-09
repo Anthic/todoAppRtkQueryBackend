@@ -25,7 +25,7 @@ export class TodoController {
   }
   async createTodo(req: Request, res: Response, next: NextFunction) {
     try {
-      const todo = await todoService.createTodo(req.body);
+      const todo = await todoService.createTodo(req.body, req.file);
       res.status(201).json({ success: true, data: todo });
     } catch (error) {
       next(error);
@@ -36,6 +36,7 @@ export class TodoController {
       const todo = await todoService.updateTodo(
         Number(req.params.id),
         req.body,
+        req.file,
       );
       res.json({ success: true, data: todo });
     } catch (error) {
