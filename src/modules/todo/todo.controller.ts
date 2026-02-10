@@ -31,18 +31,24 @@ export class TodoController {
       next(error);
     }
   }
-  async updateTodo(req: Request, res: Response, next: NextFunction) {
-    try {
-      const todo = await todoService.updateTodo(
-        Number(req.params.id),
-        req.body,
-        req.file,
-      );
-      res.json({ success: true, data: todo });
-    } catch (error) {
-      next(error);
+async updateTodo(req: Request, res: Response, next: NextFunction) {
+  try {
+   
+    const updateData = { ...req.body };
+    if (updateData.completed !== undefined) {
+      updateData.completed = updateData.completed === 'true' || updateData.completed === true;
     }
+    
+    const todo = await todoService.updateTodo(
+      Number(req.params.id),
+      updateData,
+      req.file,
+    );
+    res.json({ success: true, data: todo });
+  } catch (error) {
+    next(error);
   }
+}
 
   async deleteTodo(req: Request, res: Response, next: NextFunction) {
     try {

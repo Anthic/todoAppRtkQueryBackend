@@ -1,9 +1,10 @@
+
 import express from "express";
 import cors from "cors";
 import { errorMiddleware } from "../middleware/error.middleware.js";
 import router from "../modules/todo/todo.router.js";
 
-const app = express();
+export const app = express();
 
 app.use(cors());
 app.use(express.json());
@@ -17,4 +18,4 @@ app.get("/", (_req, res) => {
 });
 
 app.use(errorMiddleware);
-export default app;
+export default app

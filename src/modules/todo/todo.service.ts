@@ -1,12 +1,16 @@
+import { PrismaClient } from "@prisma/client";
 import {
   deleteFromCloudinary,
   uploadToCloudinary,
 } from "../../config/config.js";
-import { prisma } from "../../config/prisma.config.js";
+
+
 
 import { AppError } from "../../middleware/error.middleware.js";
 import type { CreateTodoDTO, ITodo, UpdateTodoDTO } from "./todo.type.js";
 
+
+const prisma = new PrismaClient();
 export class TodoService {
   async getAllTodos(): Promise<ITodo[]> {
     return prisma.todo.findMany({
