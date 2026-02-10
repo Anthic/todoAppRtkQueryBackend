@@ -2,11 +2,10 @@ import {
   deleteFromCloudinary,
   uploadToCloudinary,
 } from "../../config/config.js";
-import { PrismaClient } from "../../generated/prisma/client.js";
+import { prisma } from "../../config/prisma.config.js";
+
 import { AppError } from "../../middleware/error.middleware.js";
 import type { CreateTodoDTO, ITodo, UpdateTodoDTO } from "./todo.type.js";
-
-const prisma = new PrismaClient();
 
 export class TodoService {
   async getAllTodos(): Promise<ITodo[]> {
@@ -65,13 +64,15 @@ export class TodoService {
 
     let imageUrl: string | null | undefined = data.image;
     let imagePublicId: string | null | undefined = undefined;
+    let oldImagePublicId: string | null | undefined = undefined;
     if (file) {
       const uploadResult = await uploadToCloudinary(file.buffer);
       imageUrl = uploadResult.imageUrl;
       imagePublicId = uploadResult.publicId;
-      if (existingTodo.imagePublicId) {
-        await deleteFromCloudinary(existingTodo.imagePublicId).catch(() => {});
-      }
+      oldImagePublicId = existingTodo.imagePublicId;
+      // if (existingTodo.imagePublicId) {
+      //   await deleteFromCloudinary(existingTodo.imagePublicId).catch(() => {});
+      // }
     }
 
     const updateData: Partial<ITodo> = {
@@ -84,10 +85,23 @@ export class TodoService {
     if (imagePublicId !== undefined) {
       updateData.imagePublicId = imagePublicId;
     }
-    return prisma.todo.update({
-      where: { id },
-      data: updateData,
-    });
+    try {
+      const updatedTodo = await prisma.todo.update({
+        where: { id },
+        data: updateData,
+      });
+
+      if (oldImagePublicId) {
+        await deleteFromCloudinary(oldImagePublicId).catch(() => {});
+      }
+
+      return updatedTodo;
+    } catch (error) {
+      if (imagePublicId) {
+        await deleteFromCloudinary(imagePublicId).catch(() => {});
+      }
+      throw error;
+    }
   }
 
   async deleteTodo(id: number): Promise<void> {
