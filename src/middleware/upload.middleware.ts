@@ -4,29 +4,31 @@ import { AppError } from "./error.middleware.js";
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+const allowedExtensions = [".jpeg", ".jpg", ".png", ".gif", ".webp"];
+
+const fileFilter = async (
   _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
-  const allowImageTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-  ];
-  if (allowImageTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new AppError(
-        400,
-        "Only image files are allowed (jpeg, jpg, png, gif, webp)",
-      ),
-    );
+  const ext = file.originalname
+    .toLowerCase()
+    .slice(file.originalname.lastIndexOf("."));
+
+  if (!allowedExtensions.includes(ext)) {
+    return cb(new AppError(400, "Invalid file extension"));
   }
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(new AppError(400, "Invalid file type"));
+  }
+
+  // multer fileFilter sync by default
+  cb(null, true);
 };
+
 export const upload = multer({
   storage,
   fileFilter,

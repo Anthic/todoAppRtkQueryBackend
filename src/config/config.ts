@@ -14,35 +14,44 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+interface CloudinaryUploadResult {
+  secureUrl: string;
+  publicId: string;
+  imageUrl: string;
+}
+
 export const uploadToCloudinary = async (
   fileBuffer: Buffer,
   folder: string = "todos",
-): Promise<string> => {
-  return new Promise((resolve, rejects) => {
+): Promise<CloudinaryUploadResult> => {
+  return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: "image",
-      },
+      { folder, resource_type: "image" },
       (err, result) => {
         if (err) {
-          rejects(err);
+          reject(err);
+        } else if (result?.secure_url && result?.public_id) {
+          resolve({
+            secureUrl: result.secure_url,
+            publicId: result.public_id,
+            imageUrl: result.secure_url,
+          });
         } else {
-          resolve(result?.secure_url || "");
+          reject(
+            new Error(
+              "Upload succeeded but required Cloudinary fields missing",
+            ),
+          );
         }
       },
     );
     uploadStream.end(fileBuffer);
   });
 };
-export const deleteFromCloudinary = async (imageUrl: string): Promise<void> => {
-  try {
-    const publicId = imageUrl.split("/").slice(-2).join("/").split(".")[0];
-    if (!publicId) return;
-    await cloudinary.uploader.destroy(publicId);
-  } catch (error) {
-    console.error("Error deleting from Cloudinary:", error);
-  }
+
+export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
+  if (!publicId) return;
+  await cloudinary.uploader.destroy(publicId);
 };
 
 export { cloudinary };

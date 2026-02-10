@@ -55,7 +55,7 @@ export class TodoController {
 
   async toggleTodo(req: Request, res: Response, next: NextFunction) {
     try {
-      const todo = await todoService.toggoleTodo(Number(req.params.id));
+      const todo = await todoService.toggleTodo(Number(req.params.id));
       res.json({ success: true, data: todo });
     } catch (error) {
       next(error);
