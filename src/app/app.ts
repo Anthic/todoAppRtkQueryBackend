@@ -1,8 +1,8 @@
-
 import express from "express";
 import cors from "cors";
 import { errorMiddleware } from "../middleware/error.middleware.js";
 import router from "../modules/todo/todo.router.js";
+import notFound from "../middleware/notFoundPage.ts";
 
 export const app = express();
 
@@ -18,4 +18,6 @@ app.get("/", (_req, res) => {
 });
 
 app.use(errorMiddleware);
-export default app
+
+app.use(notFound);
+export default app;

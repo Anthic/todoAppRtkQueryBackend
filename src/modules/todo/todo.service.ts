@@ -4,11 +4,8 @@ import {
   uploadToCloudinary,
 } from "../../config/config.js";
 
-
-
-import { AppError } from "../../middleware/error.middleware.js";
 import type { CreateTodoDTO, ITodo, UpdateTodoDTO } from "./todo.type.js";
-
+import AppError from "../../errors/ApiError.ts";
 
 const prisma = new PrismaClient();
 export class TodoService {
@@ -26,6 +23,7 @@ export class TodoService {
 
   async createTodo(
     data: CreateTodoDTO,
+    userId: number,
     file?: Express.Multer.File,
   ): Promise<ITodo> {
     if (!data.title?.trim()) {
@@ -46,7 +44,7 @@ export class TodoService {
         data: {
           title: data.title.trim(),
           completed: false,
-
+          userId: userId,
           image: imageUrl,
           imagePublicId: imagePublicId,
         },

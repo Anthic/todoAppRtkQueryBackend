@@ -1,6 +1,6 @@
 import type { Request } from "express";
 import multer from "multer";
-import { AppError } from "./error.middleware.js";
+import AppError from "../errors/ApiError.ts";
 
 const storage = multer.memoryStorage();
 
