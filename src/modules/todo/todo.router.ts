@@ -25,4 +25,4 @@ router.patch(
 router.patch("/:id/toggle", todoController.toggleTodo.bind(todoController));
 router.delete("/:id", todoController.deleteTodo.bind(todoController));
 
-export default router;
+export const todoRoute = router;

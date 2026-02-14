@@ -72,9 +72,6 @@ export class TodoService {
       imageUrl = uploadResult.imageUrl;
       imagePublicId = uploadResult.publicId;
       oldImagePublicId = existingTodo.imagePublicId;
-      // if (existingTodo.imagePublicId) {
-      //   await deleteFromCloudinary(existingTodo.imagePublicId).catch(() => {});
-      // }
     }
 
     const updateData: Partial<ITodo> = {

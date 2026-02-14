@@ -1,0 +1,25 @@
+import type { Response } from "express";
+
+interface TMeta {
+  page: number;
+  limit: number;
+  totalPage: number;
+  total: number;
+}
+
+interface TResponse<T> {
+  StatusCode: number;
+  success: boolean;
+  message: string;
+  data: T;
+  meta?: TMeta;
+}
+export const sendResponse = <T>(res: Response, data: TResponse<T>) => {
+  res.status(data.StatusCode).json({
+    statusCode: data.StatusCode,
+    success: data.success,
+    message: data.message,
+    meta: data.meta,
+    data: data.data,
+  });
+};
