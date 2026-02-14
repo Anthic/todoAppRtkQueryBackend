@@ -57,7 +57,7 @@ const register = async (data: RegisterDTO): Promise<AuthResponse> => {
 
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: hashedToken,
       userId: user.id,
       expiresAt,
     },
@@ -73,8 +73,6 @@ const register = async (data: RegisterDTO): Promise<AuthResponse> => {
     refreshToken,
   };
 };
-
-
 
 export const authService = {
   register,

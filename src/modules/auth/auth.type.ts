@@ -29,6 +29,8 @@ export interface JWTPayload {
   role: Role;
 }
 
+import type { Request } from "express";
+
 export interface RequestWithUser extends Request {
   user?: JWTPayload;
 }
