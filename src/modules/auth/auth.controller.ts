@@ -49,7 +49,7 @@ const refreshToken = catchAsync(
     sendResponse(res, {
       StatusCode: 200,
       success: true,
-      message: "Token refreshed successfull",
+      message: "Token refreshed successfully",
       data: result,
     });
   },
@@ -66,8 +66,18 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   await authService.logout(userId, refreshToken);
 
   // Clear cookies
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+  res.clearCookie("accessToken", {
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  });
+  res.clearCookie("refreshToken", {
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+  });
 
   sendResponse(res, {
     StatusCode: 200,

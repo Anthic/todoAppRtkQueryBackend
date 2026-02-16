@@ -145,7 +145,7 @@ const refreshAccessToken = async (
   refreshToken: string,
 ): Promise<{ accessToken: string; refreshToken: string }> => {
   try {
-    const decoded = verifyToken(refreshToken, envVariable.JWT_REFRESH_SECRET);
+    verifyToken(refreshToken, envVariable.JWT_REFRESH_SECRET);
 
     const hashedToken = crypto
       .createHash("sha256")
@@ -192,24 +192,28 @@ const refreshAccessToken = async (
       .update(newRefreshToken)
       .digest("hex");
 
-    // Delete old token and create new one
-    await prisma.refreshToken.delete({
-      where: { id: storedToken.id },
-    });
-
-    await prisma.refreshToken.create({
-      data: {
-        token: newHashedToken,
-        userId: storedToken.user.id,
-        expiresAt: newExpiresAt,
-      },
-    });
+    // Delete old token and create new one atomically
+    await prisma.$transaction([
+      prisma.refreshToken.delete({
+        where: { id: storedToken.id },
+      }),
+      prisma.refreshToken.create({
+        data: {
+          token: newHashedToken,
+          userId: storedToken.user.id,
+          expiresAt: newExpiresAt,
+        },
+      }),
+    ]);
 
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     };
   } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
     throw new AppError(401, "Invalid or expired refresh token");
   }
 };
@@ -217,7 +221,7 @@ const refreshAccessToken = async (
 const logout = async (userId: number, refreshToken?: string): Promise<void> => {
   if (refreshToken) {
     const hashedToken = crypto
-      .createHash("sh256")
+      .createHash("sha256")
       .update(refreshToken)
       .digest("hex");
 
@@ -237,5 +241,5 @@ export const authService = {
   register,
   login,
   refreshAccessToken,
-  logout
+  logout,
 };

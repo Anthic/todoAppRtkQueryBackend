@@ -31,7 +31,7 @@ export const authenticate = async (
       token,
       envVariable.JWT_SECRET,
     ) as AuthTokenPayload;
-    if (!decoded || !decoded.userId) {
+    if (!decoded || !decoded.userId || !decoded.email || !decoded.role) {
       throw new AppError(401, "Invalid or expired token");
     }
     req.user = {
@@ -56,6 +56,9 @@ export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return next(new AppError(401, "Authentication required"));
+    }
+    if (roles.length === 0) {
+      return next();
     }
     if (!roles.includes(req.user.role)) {
       return next(
