@@ -69,14 +69,14 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   res.clearCookie("accessToken", {
     path: "/",
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
   });
   res.clearCookie("refreshToken", {
     path: "/",
     httpOnly: true,
-    secure: true,
-    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
   });
 
   sendResponse(res, {
