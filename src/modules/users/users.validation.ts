@@ -18,5 +18,5 @@ export const updateUserSchema = z.object({
 
 // User ID Param Validation
 export const userIdParamSchema = z.object({
-  id: z.string().regex(/^\d+$/, "Invalid user ID").transform(Number),
+  id: z.coerce.number().int().positive().safe(),
 });

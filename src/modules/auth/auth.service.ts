@@ -30,7 +30,7 @@ const register = async (data: RegisterDTO): Promise<AuthResponse> => {
       email: data.email,
       password: hashedPassword,
       name: data.name || null,
-      role: data.role || "USER",
+      role:  "USER",
     },
   });
 
@@ -250,7 +250,7 @@ const resetPassword = async (
   decodedToken: JWTPayload,
 ) => {
   if (payload.id !== decodedToken.userId) {
-    throw new AppError(401, "You can not reset your password");
+    throw new AppError(403, "You can only reset your own password");
   }
   const isUserExist = await prisma.user.findUnique({
     where: { id: decodedToken.userId },
@@ -263,6 +263,10 @@ const resetPassword = async (
   await prisma.user.update({
     where: { id: decodedToken.userId },
     data: { password: hashedPassword },
+  });
+  // Invalidate all refresh tokens for security
+  await prisma.refreshToken.deleteMany({
+    where: { userId: decodedToken.userId },
   });
 };
 
@@ -292,6 +296,10 @@ const updatePassword = async (
     data: {
       password: hashedPassword,
     },
+  });
+  // Invalidate all refresh tokens for security
+  await prisma.refreshToken.deleteMany({
+    where: { userId },
   });
 };
 

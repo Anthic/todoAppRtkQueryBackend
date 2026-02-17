@@ -74,7 +74,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
   });
-  res.clearCookie("refreshToken", {  
+  res.clearCookie("refreshToken", {
     path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -104,9 +104,16 @@ const resetPassword = catchAsync(
 
 const updatePassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const decodedToken = req.user as JWTPayload;
+    const decodedToken = req.user;
+    if (!decodedToken?.userId) {
+      throw new AppError(401, "Not authenticated");
+    }
     const { oldPassword, newPassword } = req.body;
-    await authService.updatePassword(decodedToken.userId, oldPassword, newPassword);
+    await authService.updatePassword(
+      decodedToken.userId,
+      oldPassword,
+      newPassword,
+    );
     sendResponse(res, {
       success: true,
       StatusCode: 200,

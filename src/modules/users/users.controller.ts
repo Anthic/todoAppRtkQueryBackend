@@ -26,10 +26,14 @@ const getAllUser = catchAsync(
 const getSingleUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    const result = await UserService.getSingleUser(Number(id));
+    const numericId = Number(id);
+    if (Number.isNaN(numericId)) {
+      throw new Error("Invalid user ID");
+    }
+    const result = await UserService.getSingleUser(numericId);
     sendResponse(res, {
       success: true,
-      StatusCode: 201,
+      StatusCode: StatusCodes.OK,
       message: "User Retrieved Successfully",
       data: result.data,
     });
@@ -48,7 +52,7 @@ const updateUser = catchAsync(
 
     sendResponse(res, {
       success: true,
-      StatusCode: StatusCodes.CREATED,
+      StatusCode: StatusCodes.OK,
       message: "User Updated Successfully",
       data: user,
     });

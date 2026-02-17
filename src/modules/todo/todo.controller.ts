@@ -1,7 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { todoService } from "./todo.service.js";
-import AppError from "../../errors/ApiError.ts";
-
+import AppError from "../../errors/ApiError.js";
 export class TodoController {
   async listTodos(_req: Request, res: Response, next: NextFunction) {
     try {
@@ -41,6 +40,9 @@ export class TodoController {
   }
   async updateTodo(req: Request, res: Response, next: NextFunction) {
     try {
+      if (!req.user?.userId) {
+        throw new AppError(401, "User not authenticated");
+      }
       const updateData = { ...req.body };
       if (updateData.completed !== undefined) {
         updateData.completed =
@@ -60,6 +62,9 @@ export class TodoController {
 
   async deleteTodo(req: Request, res: Response, next: NextFunction) {
     try {
+      if (!req.user?.userId) {
+        throw new AppError(401, "User not authenticated");
+      }
       await todoService.deleteTodo(Number(req.params.id));
       res.json({ success: true, message: "Deleted" });
     } catch (error) {
@@ -69,6 +74,9 @@ export class TodoController {
 
   async toggleTodo(req: Request, res: Response, next: NextFunction) {
     try {
+      if (!req.user?.userId) {
+        throw new AppError(401, "User not authenticated");
+      }
       const todo = await todoService.toggleTodo(Number(req.params.id));
       res.json({ success: true, data: todo });
     } catch (error) {

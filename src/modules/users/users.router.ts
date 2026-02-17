@@ -22,7 +22,7 @@ router.patch(
   "/:id",
   authenticate,
   zodValidation(updateUserSchema),
-  authorize(...Object.values(Role)),
+
   UserController.updateUser,
 );
 

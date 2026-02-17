@@ -1,4 +1,4 @@
-﻿import type { NextFunction, Request, Response } from "express";
+﻿﻿import type { NextFunction, Request, Response } from "express";
 import { envVariable } from "../config/env.ts";
 import { deleteFromCloudinary } from "../config/config.ts";
 import type { TErrorSource } from "../interface/erro.type.ts";
@@ -35,7 +35,7 @@ export const errorMiddleware = async (
 
   let errorSource: TErrorSource[] = [];
   let statusCode: number = 500;
-  let message: string = "Something Went Worng!";
+  let message: string = "Something Went Wrong!";
 
   // Zod validation error handler
   if (err instanceof ZodError) {
@@ -82,7 +82,10 @@ export const errorMiddleware = async (
   // Generic Error handler
   else if (err instanceof Error) {
     statusCode = 500;
-    message = err.message;
+    message =
+      envVariable.NODE_ENV === "development"
+        ? err.message
+        : "Internal Server Error";
   }
 
   res.status(statusCode).json({
