@@ -1,9 +1,10 @@
-import type { Request, Response, NextFunction } from "express";
+﻿import type { Request, Response, NextFunction } from "express";
 import catchAsync from "../../shared/catchAsync.ts";
 import { authService } from "./auth.service.ts";
 import { sendResponse } from "../../utils/sendResponse.ts";
 import { setAuthCookie } from "../../utils/setCookies.ts";
 import AppError from "../../errors/ApiError.ts";
+import type { JWTPayload } from "./auth.type.ts";
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.register(req.body);
@@ -18,6 +19,7 @@ const register = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const login = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.login(req.body);
   setAuthCookie(res, {
@@ -72,7 +74,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
   });
-  res.clearCookie("refreshToken", {
+  res.clearCookie("refreshToken", {  
     path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -86,9 +88,39 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     data: null,
   });
 });
+
+const resetPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user;
+    await authService.resetPassword(req.body, decodedToken as JWTPayload);
+    sendResponse(res, {
+      success: true,
+      StatusCode: 200,
+      message: "Password Changed Successfully",
+      data: null,
+    });
+  },
+);
+
+const updatePassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JWTPayload;
+    const { oldPassword, newPassword } = req.body;
+    await authService.updatePassword(decodedToken.userId, oldPassword, newPassword);
+    sendResponse(res, {
+      success: true,
+      StatusCode: 200,
+      message: "Password updated successfully",
+      data: null,
+    });
+  },
+);
+
 export const authController = {
   register,
   login,
   refreshToken,
+  resetPassword,
   logout,
+  updatePassword,
 };

@@ -1,14 +1,14 @@
-import type { NextFunction, Request, Response } from "express";
+﻿import type { NextFunction, Request, Response } from "express";
 import type { ZodObject } from "zod";
 
 export const zodValidation =
   (zodSchema: ZodObject) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.body.data) {
+      if (req.body?.data) {
         req.body = JSON.parse(req.body.data);
       }
-      req.body = await zodSchema.parseAsync(req.body);
+      req.body = await zodSchema.parseAsync(req.body || {});
 
       next();
     } catch (error) {

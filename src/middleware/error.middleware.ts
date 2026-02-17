@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "express";
+﻿import type { NextFunction, Request, Response } from "express";
 import { envVariable } from "../config/env.ts";
 import { deleteFromCloudinary } from "../config/config.ts";
 import type { TErrorSource } from "../interface/erro.type.ts";
@@ -8,6 +8,7 @@ import { handlePrismaNotFoundError } from "../helpers/prisma.error.helper/handle
 import { handlePrismaValidationError } from "../helpers/prisma.error.helper/handlePrismaValidationError.ts";
 import { handlePrismaForeignKeyError } from "../helpers/prisma.error.helper/handlePrismaForeignKeyError.ts";
 import AppError from "../errors/ApiError.ts";
+import { ZodError } from "zod";
 
 export const errorMiddleware = async (
   err: any,
@@ -31,19 +32,30 @@ export const errorMiddleware = async (
 
     await Promise.all(imageUrl.map((url) => deleteFromCloudinary(url)));
   }
+
   let errorSource: TErrorSource[] = [];
   let statusCode: number = 500;
   let message: string = "Something Went Worng!";
-  //prisma error handler
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+
+  // Zod validation error handler
+  if (err instanceof ZodError) {
+    statusCode = 400;
+    message = "Validation Error";
+    errorSource = err.issues.map((issue) => ({
+      path: issue.path.join(".") || "body",
+      message: issue.message,
+    }));
+  }
+  // Prisma error handler
+  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
-      //unique constraint violation
+      // Unique constraint violation
       const simplifiedError = handlePrismaUniqueError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       errorSource = simplifiedError.errorSource || [];
     } else if (err.code === "P2025") {
-      //Record not found
+      // Record not found
       const simplifiedError = handlePrismaNotFoundError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
@@ -60,13 +72,17 @@ export const errorMiddleware = async (
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       errorSource = simplifiedError.errorSource || [];
-    } else if (err instanceof AppError) {
-      statusCode = err.statusCode;
-      message = err.message;
-    } else if (err instanceof Error) {
-      statusCode = 500;
-      message = err.message;
     }
+  }
+  // Custom AppError handler
+  else if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+  }
+  // Generic Error handler
+  else if (err instanceof Error) {
+    statusCode = 500;
+    message = err.message;
   }
 
   res.status(statusCode).json({

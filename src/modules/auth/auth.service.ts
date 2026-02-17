@@ -1,5 +1,11 @@
+﻿import bcryptjs from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
-import type { AuthResponse, LoginDTO, RegisterDTO } from "./auth.type.ts";
+import type {
+  AuthResponse,
+  JWTPayload,
+  LoginDTO,
+  RegisterDTO,
+} from "./auth.type.ts";
 import AppError from "../../errors/ApiError.ts";
 import { comparePassword, hashPassword } from "../../utils/password.utils.ts";
 import { generateToken, verifyToken } from "../../utils/jwt.util.ts";
@@ -24,6 +30,7 @@ const register = async (data: RegisterDTO): Promise<AuthResponse> => {
       email: data.email,
       password: hashedPassword,
       name: data.name || null,
+      role: data.role || "USER",
     },
   });
 
@@ -237,9 +244,62 @@ const logout = async (userId: number, refreshToken?: string): Promise<void> => {
     });
   }
 };
+
+const resetPassword = async (
+  payload: Record<string, any>,
+  decodedToken: JWTPayload,
+) => {
+  if (payload.id !== decodedToken.userId) {
+    throw new AppError(401, "You can not reset your password");
+  }
+  const isUserExist = await prisma.user.findUnique({
+    where: { id: decodedToken.userId },
+  });
+
+  if (!isUserExist) {
+    throw new AppError(401, "User does not exist");
+  }
+  const hashedPassword = await hashPassword(payload.newPassword);
+  await prisma.user.update({
+    where: { id: decodedToken.userId },
+    data: { password: hashedPassword },
+  });
+};
+
+const updatePassword = async (
+  userId: number,
+  oldPassword: string,
+  newPassword: string,
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  // Verify old password
+  const isPasswordValid = await comparePassword(oldPassword, user.password);
+  if (!isPasswordValid) {
+    throw new AppError(401, "Current password is incorrect");
+  }
+
+  // Hash and update new password
+  const hashedPassword = await hashPassword(newPassword);
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      password: hashedPassword,
+    },
+  });
+};
+
 export const authService = {
   register,
   login,
   refreshAccessToken,
   logout,
+  updatePassword,
+  resetPassword,
 };
