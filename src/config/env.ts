@@ -10,6 +10,7 @@ interface EnvConfig {
   JWT_REFRESH_SECRET: string;
   JWT_REFRESH_EXPIRY: string;
   SALT_ROUNDS: string;
+  FRONTEND_URL: string;
 }
 const loadEnvVariable = (): EnvConfig => {
   const requireEnvVariables: string[] = [
@@ -20,6 +21,7 @@ const loadEnvVariable = (): EnvConfig => {
     "JWT_REFRESH_SECRET",
     "JWT_REFRESH_EXPIRY",
     "SALT_ROUNDS",
+    "FRONTEND_URL",
   ];
   requireEnvVariables.forEach((key) => {
     if (!process.env[key]) {
@@ -35,6 +37,7 @@ const loadEnvVariable = (): EnvConfig => {
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_EXPIRY as string,
     JWT_REFRESH_EXPIRY: process.env.JWT_REFRESH_EXPIRY as string,
     SALT_ROUNDS: process.env.SALT_ROUNDS as string,
+    FRONTEND_URL: process.env.FRONTEND_URL as string,
   };
 };
 export const envVariable = loadEnvVariable();

@@ -9,15 +9,21 @@ import AppError from "../../errors/ApiError.ts";
 
 const prisma = new PrismaClient();
 export class TodoService {
-  async getAllTodos(): Promise<ITodo[]> {
+  async getAllTodos(userId: number): Promise<ITodo[]> {
     return prisma.todo.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
   }
 
-  async getTodoById(id: number): Promise<ITodo> {
-    const todo = await prisma.todo.findUnique({ where: { id } });
-    if (!todo) throw new AppError(404, "Todo not found");
+  async getTodoById(id: number, userId: number): Promise<ITodo> {
+    const todo = await prisma.todo.findUnique({
+      where: {
+        id,
+        userId,
+      },
+    });
+    if (!todo) throw new AppError(404, "Todo not found or unauthorized");
     return todo;
   }
 
@@ -59,10 +65,11 @@ export class TodoService {
 
   async updateTodo(
     id: number,
+    userId: number,
     data: UpdateTodoDTO,
     file?: Express.Multer.File,
   ): Promise<ITodo> {
-    const existingTodo = await this.getTodoById(id);
+    const existingTodo = await this.getTodoById(id, userId);
 
     let imageUrl: string | null | undefined = data.image;
     let imagePublicId: string | null | undefined = undefined;
@@ -103,8 +110,8 @@ export class TodoService {
     }
   }
 
-  async deleteTodo(id: number): Promise<void> {
-    const todo = await this.getTodoById(id);
+  async deleteTodo(id: number, userId: number): Promise<void> {
+    const todo = await this.getTodoById(id, userId);
 
     await prisma.todo.delete({
       where: { id },
@@ -116,8 +123,8 @@ export class TodoService {
     }
   }
 
-  async toggleTodo(id: number): Promise<ITodo> {
-    const todo = await this.getTodoById(id);
+  async toggleTodo(id: number, userId: number): Promise<ITodo> {
+    const todo = await this.getTodoById(id, userId);
 
     return prisma.todo.update({
       where: { id },

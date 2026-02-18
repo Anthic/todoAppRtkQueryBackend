@@ -20,7 +20,7 @@ router.post("/login", zodValidation(loginSchema), authController.login);
 
 router.post(
   "/refresh",
-  zodValidation(refreshTokenSchema),
+  
   authController.refreshToken,
 );
 router.post(

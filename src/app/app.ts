@@ -5,10 +5,16 @@ import { errorMiddleware } from "../middleware/error.middleware.js";
 import notFound from "../middleware/notFoundPage.ts";
 import { router } from "../routes/index.ts";
 import cookieParser from "cookie-parser";
+import { envVariable } from "../config/env.ts";
 
 export const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: envVariable.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", router);

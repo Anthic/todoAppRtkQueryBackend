@@ -2,12 +2,14 @@ import type { NextFunction, Request, Response } from "express";
 import { todoService } from "./todo.service.js";
 import AppError from "../../errors/ApiError.js";
 export class TodoController {
-  async listTodos(_req: Request, res: Response, next: NextFunction) {
+  async listTodos(req: Request, res: Response, next: NextFunction) {
     try {
-      const todos = await todoService.getAllTodos();
+      if (!req.user?.userId) {
+        throw new AppError(401, "User not authenticated");
+      }
+      const todos = await todoService.getAllTodos(req.user.userId);
       res.json({
-        sucess: true,
-
+        success: true,
         data: todos,
       });
     } catch (error) {
@@ -17,7 +19,13 @@ export class TodoController {
 
   async getTodo(req: Request, res: Response, next: NextFunction) {
     try {
-      const todo = await todoService.getTodoById(Number(req.params.id));
+      if (!req.user?.userId) {
+        throw new AppError(401, "User not authenticated");
+      }
+      const todo = await todoService.getTodoById(
+        Number(req.params.id),
+        req.user.userId,
+      );
       res.json({ success: true, data: todo });
     } catch (error) {
       next(error);
@@ -51,6 +59,7 @@ export class TodoController {
 
       const todo = await todoService.updateTodo(
         Number(req.params.id),
+        req.user.userId,
         updateData,
         req.file,
       );
@@ -65,7 +74,7 @@ export class TodoController {
       if (!req.user?.userId) {
         throw new AppError(401, "User not authenticated");
       }
-      await todoService.deleteTodo(Number(req.params.id));
+      await todoService.deleteTodo(Number(req.params.id), req.user.userId);
       res.json({ success: true, message: "Deleted" });
     } catch (error) {
       next(error);
@@ -77,7 +86,10 @@ export class TodoController {
       if (!req.user?.userId) {
         throw new AppError(401, "User not authenticated");
       }
-      const todo = await todoService.toggleTodo(Number(req.params.id));
+      const todo = await todoService.toggleTodo(
+        Number(req.params.id),
+        req.user.userId,
+      );
       res.json({ success: true, data: todo });
     } catch (error) {
       next(error);
